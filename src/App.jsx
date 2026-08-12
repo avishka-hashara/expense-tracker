@@ -22,7 +22,8 @@ import {
   Database,
   HardDrive,
   LayoutDashboard,
-  FolderKanban
+  FolderKanban,
+  X
 } from 'lucide-react'
 
 const todayStr = () => new Date().toISOString().slice(0, 10)
@@ -97,7 +98,7 @@ function saveLocalExpenses(expenses) {
 }
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('EXPENSES') // 'EXPENSES' | 'CATEGORIES'
+  const [activeTab, setActiveTab] = useState('EXPENSES') // 'EXPENSES' | 'CALENDAR' | 'CATEGORIES'
   const [categories, setCategories] = useState([])
   const [expenses, setExpenses] = useState([])
   const [month, setMonth] = useState(monthOf(todayStr()))
@@ -108,6 +109,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('ALL')
   const [deletingId, setDeletingId] = useState(null)
+  const [isMobileAddOpen, setIsMobileAddOpen] = useState(false)
 
   const [form, setForm] = useState({
     spent_on: todayStr(),
@@ -259,6 +261,7 @@ export default function App() {
 
     setSubmitting(false)
     setForm({ ...form, amount: '', note: '' })
+    setIsMobileAddOpen(false)
 
     if (monthOf(form.spent_on) === month) {
       loadExpenses()
@@ -1119,6 +1122,202 @@ export default function App() {
           />
         )}
       </div>
+
+      {/* MOBILE BOTTOM NAVIGATION BAR (sm:hidden) */}
+      <nav className="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-[#121215]/95 backdrop-blur-2xl border-t border-white/10 px-6 py-2.5 flex items-center justify-between shadow-2xl">
+        <button
+          onClick={() => setActiveTab('EXPENSES')}
+          className={`flex flex-col items-center gap-1 text-[11px] font-medium transition ${
+            activeTab === 'EXPENSES' ? 'text-[#0a84ff]' : 'text-white/40'
+          }`}
+        >
+          <LayoutDashboard className="h-5 w-5" />
+          <span>Overview</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('CALENDAR')}
+          className={`flex flex-col items-center gap-1 text-[11px] font-medium transition ${
+            activeTab === 'CALENDAR' ? 'text-[#0a84ff]' : 'text-white/40'
+          }`}
+        >
+          <Calendar className="h-5 w-5" />
+          <span>Calendar</span>
+        </button>
+
+        {/* Elevated Mobile FAB */}
+        <button
+          onClick={() => setIsMobileAddOpen(true)}
+          className="flex items-center justify-center h-12 w-12 rounded-full bg-gradient-to-tr from-[#007aff] to-[#5856d6] text-white shadow-xl shadow-[#007aff]/40 -mt-5 border-4 border-[#050507] active:scale-95 transition-transform"
+          title="Record Expense"
+        >
+          <PlusCircle className="h-6 w-6" />
+        </button>
+
+        <button
+          onClick={() => setActiveTab('CATEGORIES')}
+          className={`flex flex-col items-center gap-1 text-[11px] font-medium transition ${
+            activeTab === 'CATEGORIES' ? 'text-[#0a84ff]' : 'text-white/40'
+          }`}
+        >
+          <FolderKanban className="h-5 w-5" />
+          <span>Categories</span>
+        </button>
+      </nav>
+
+      {/* MOBILE QUICK RECORD EXPENSE BOTTOM SHEET */}
+      {isMobileAddOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+          {/* Backdrop Click Area */}
+          <div
+            className="absolute inset-0"
+            onClick={() => setIsMobileAddOpen(false)}
+          />
+
+          {/* Bottom Sheet Drawer */}
+          <div className="apple-card w-full max-w-lg p-6 relative z-10 rounded-t-3xl sm:rounded-3xl border-t sm:border border-white/20 animate-slideUp bg-[#121215] max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-5">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#007aff]/15 text-[#0a84ff]">
+                  <PlusCircle className="h-4.5 w-4.5" />
+                </div>
+                <h3 className="text-lg font-bold text-white tracking-tight">Record Expense</h3>
+              </div>
+              <button
+                onClick={() => setIsMobileAddOpen(false)}
+                className="rounded-full p-2 text-white/50 hover:text-white hover:bg-white/10 transition"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={addExpense} className="space-y-4">
+              {/* Date Input */}
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-white/50 mb-1.5">
+                  Date
+                </label>
+                <input
+                  type="date"
+                  value={form.spent_on}
+                  onChange={(e) => setForm({ ...form, spent_on: e.target.value })}
+                  className="glass-input w-full rounded-xl px-3.5 py-3 text-base focus:ring-2 focus:ring-[#007aff]"
+                  required
+                />
+                <div className="flex gap-3 mt-2">
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, spent_on: todayStr() })}
+                    className="text-xs font-semibold text-[#0a84ff] bg-[#007aff]/10 px-2.5 py-1 rounded-lg border border-[#007aff]/20"
+                  >
+                    Today
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const d = new Date()
+                      d.setDate(d.getDate() - 1)
+                      setForm({ ...form, spent_on: d.toISOString().slice(0, 10) })
+                    }}
+                    className="text-xs text-white/70 bg-white/5 px-2.5 py-1 rounded-lg border border-white/10"
+                  >
+                    Yesterday
+                  </button>
+                </div>
+              </div>
+
+              {/* Amount Input with Preset Chips */}
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-white/50 mb-1.5">
+                  Amount (Rs)
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#0a84ff] font-bold text-base">
+                    Rs.
+                  </div>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    placeholder="0.00"
+                    value={form.amount}
+                    onChange={(e) => setForm({ ...form, amount: e.target.value })}
+                    className="glass-input w-full rounded-xl pl-12 pr-3.5 py-3 text-lg font-bold focus:ring-2 focus:ring-[#007aff] tabular-nums"
+                    required
+                  />
+                </div>
+                {/* Quick Presets */}
+                <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                  {[100, 250, 500, 1000, 2000, 5000].map((amt) => (
+                    <button
+                      key={amt}
+                      type="button"
+                      onClick={() => setForm({ ...form, amount: String(amt) })}
+                      className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 active:scale-95 transition"
+                    >
+                      +Rs {amt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Category Select */}
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-white/50 mb-1.5">
+                  Category
+                </label>
+                <select
+                  value={form.category_id}
+                  onChange={(e) => setForm({ ...form, category_id: e.target.value })}
+                  className="glass-input w-full rounded-xl px-3.5 py-3 text-base focus:ring-2 focus:ring-[#007aff] bg-[#141416]"
+                >
+                  <option value="" className="bg-[#141416] text-white/60">
+                    Uncategorised
+                  </option>
+                  {activeCategories.map((c) => (
+                    <option key={c.id} value={c.id} className="bg-[#141416] text-white">
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Note / Description */}
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-white/50 mb-1.5">
+                  Note / Description
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Lunch, Coffee, Uber ride..."
+                  value={form.note}
+                  onChange={(e) => setForm({ ...form, note: e.target.value })}
+                  className="glass-input w-full rounded-xl px-3.5 py-3 text-base focus:ring-2 focus:ring-[#007aff]"
+                />
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#007aff] hover:bg-[#0062cc] text-white font-bold py-3.5 px-4 text-base shadow-lg shadow-[#007aff]/30 active:scale-[0.98] disabled:opacity-50 mt-4"
+              >
+                {submitting ? (
+                  <>
+                    <RefreshCw className="h-5 w-5 animate-spin" />
+                    <span>Saving Expense...</span>
+                  </>
+                ) : (
+                  <>
+                    <PlusCircle className="h-5 w-5" />
+                    <span>Record Expense</span>
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

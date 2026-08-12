@@ -92,6 +92,17 @@
   box-shadow: 0 0 30px -5px rgba(52, 199, 89, 0.3);
 }
 
+/* Mobile Touch & Safari Auto-Zoom Prevention */
+@media (max-width: 640px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+button, input, select {
+  touch-action: manipulation;
+}
+
 /* Animations */
 @keyframes fadeIn {
   from { opacity: 0; }
@@ -103,10 +114,19 @@
   to { opacity: 1; transform: scale(1); }
 }
 
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
 .animate-fadeIn {
   animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .animate-scaleUp {
   animation: scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
