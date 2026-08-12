@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { supabase } from './supabase'
 import CategoryManager from './CategoryManager'
 import DailyExpenseCalendar from './DailyExpenseCalendar'
+import { exportToExcel } from './excelExport'
 import {
   Wallet,
   Calendar,
@@ -358,25 +359,18 @@ export default function App() {
     })
   }, [expenses, searchQuery, selectedCategoryFilter])
 
-  // Export to CSV
-  function downloadCSV() {
+  // Export to Excel (.xlsx)
+  function handleExportExcel() {
     if (expenses.length === 0) return
-    const headers = ['Date', 'Category', 'Note', 'Amount (Rs)']
-    const rows = expenses.map((e) => [
-      e.spent_on,
-      `"${e.categories?.name || 'Uncategorised'}"`,
-      `"${(e.note || '').replace(/"/g, '""')}"`,
-      e.amount,
-    ])
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n')
-    const encodedUri = encodeURI(csvContent)
-    const link = document.createElement('a')
-    link.setAttribute('href', encodedUri)
-    link.setAttribute('download', `SpendWise_Expenses_${month}.csv`)
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+    exportToExcel({
+      expenses,
+      month,
+      total,
+      dailyAverage,
+      byCategory,
+    })
   }
+
 
   const activeCategories = categories.length > 0 ? categories : DEFAULT_CATEGORIES
 
@@ -511,10 +505,10 @@ export default function App() {
             </button>
 
             <button
-              onClick={downloadCSV}
+              onClick={handleExportExcel}
               disabled={expenses.length === 0}
               className="flex items-center gap-1.5 rounded-full bg-[#007aff]/15 px-4 py-1.5 text-xs font-medium text-[#0a84ff] border border-[#007aff]/30 hover:bg-[#007aff] hover:text-white disabled:opacity-40 transition-all duration-200"
-              title="Export CSV"
+              title="Export Excel Spreadsheet (.xlsx)"
             >
               <Download className="h-3.5 w-3.5" />
               <span>Export</span>
