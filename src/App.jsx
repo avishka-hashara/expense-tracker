@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import { supabase } from './supabase'
 import CategoryManager from './CategoryManager'
+import DailyExpenseCalendar from './DailyExpenseCalendar'
 import {
   Wallet,
   Calendar,
@@ -433,25 +434,38 @@ export default function App() {
             <div className="apple-segmented-bar flex items-center gap-1">
               <button
                 onClick={() => setActiveTab('EXPENSES')}
-                className={`flex items-center gap-2 px-5 py-2 text-xs font-semibold rounded-full transition-all duration-200 ${
+                className={`flex items-center gap-2 px-4 sm:px-5 py-2 text-xs font-semibold rounded-full transition-all duration-200 ${
                   activeTab === 'EXPENSES'
                     ? 'bg-[#007aff] text-white shadow-lg shadow-[#007aff]/30'
                     : 'text-white/60 hover:text-white hover:bg-white/5'
                 }`}
               >
                 <LayoutDashboard className="h-4 w-4" />
-                <span>Expenses Dashboard</span>
+                <span>Overview</span>
               </button>
+
+              <button
+                onClick={() => setActiveTab('CALENDAR')}
+                className={`flex items-center gap-2 px-4 sm:px-5 py-2 text-xs font-semibold rounded-full transition-all duration-200 ${
+                  activeTab === 'CALENDAR'
+                    ? 'bg-[#007aff] text-white shadow-lg shadow-[#007aff]/30'
+                    : 'text-white/60 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <Calendar className="h-4 w-4" />
+                <span>Daily Calendar</span>
+              </button>
+
               <button
                 onClick={() => setActiveTab('CATEGORIES')}
-                className={`flex items-center gap-2 px-5 py-2 text-xs font-semibold rounded-full transition-all duration-200 ${
+                className={`flex items-center gap-2 px-4 sm:px-5 py-2 text-xs font-semibold rounded-full transition-all duration-200 ${
                   activeTab === 'CATEGORIES'
                     ? 'bg-[#007aff] text-white shadow-lg shadow-[#007aff]/30'
                     : 'text-white/60 hover:text-white hover:bg-white/5'
                 }`}
               >
                 <FolderKanban className="h-4 w-4" />
-                <span>Manage Categories</span>
+                <span>Categories</span>
               </button>
             </div>
           </div>
@@ -852,6 +866,17 @@ export default function App() {
               </div>
             </div>
 
+            {/* DAILY EXPENSE CALENDAR VISUALIZATION */}
+            <div className="mb-8">
+              <DailyExpenseCalendar
+                expenses={expenses}
+                month={month}
+                setMonth={setMonth}
+                categories={activeCategories}
+                onDeleteExpense={deleteExpense}
+              />
+            </div>
+
             {/* EXPENSES TRANSACTIONS LOG TABLE & FILTERS - Spreads Across Entire Container */}
             <div className="apple-card overflow-hidden">
               {/* Header Controls */}
@@ -996,6 +1021,98 @@ export default function App() {
               )}
             </div>
           </>
+        ) : activeTab === 'CALENDAR' ? (
+          <div className="space-y-8">
+            <DailyExpenseCalendar
+              expenses={expenses}
+              month={month}
+              setMonth={setMonth}
+              categories={activeCategories}
+              onDeleteExpense={deleteExpense}
+            />
+            {/* EXPENSES TRANSACTIONS LOG TABLE & FILTERS */}
+            <div className="apple-card overflow-hidden">
+              <div className="p-6 border-b border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-lg font-bold text-white tracking-tight">Month Transactions</h2>
+                  <p className="text-xs text-white/50">
+                    Displaying {filteredExpenses.length} of {expenses.length} records for {formatMonthLabel(month)}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="relative min-w-[220px]">
+                    <Search className="absolute left-3.5 top-2.5 h-4 w-4 text-white/40" />
+                    <input
+                      type="text"
+                      placeholder="Search transactions..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="glass-input w-full rounded-full pl-9 pr-3 py-1.5 text-xs focus:ring-2 focus:ring-[#007aff]"
+                    />
+                  </div>
+                </div>
+              </div>
+              {filteredExpenses.length === 0 ? (
+                <div className="py-16 text-center text-white/40">
+                  <FileText className="h-10 w-10 mx-auto text-white/20 mb-2" />
+                  <p className="text-sm">No expenses found for this selection.</p>
+                </div>
+              ) : (
+                <ul className="divide-y divide-white/[0.06]">
+                  {filteredExpenses.map((e) => (
+                    <li
+                      key={e.id}
+                      className="group flex items-center justify-between gap-4 p-4.5 sm:px-6 hover:bg-white/[0.03] transition-colors"
+                    >
+                      <div className="flex items-center gap-4 min-w-0">
+                        <div
+                          className="h-10 w-10 rounded-2xl flex items-center justify-center shrink-0 border border-white/10"
+                          style={{
+                            backgroundColor: `${e.categories?.color ?? '#64748b'}20`,
+                          }}
+                        >
+                          <Tag
+                            className="h-4.5 w-4.5"
+                            style={{ color: e.categories?.color ?? '#94a3b8' }}
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="font-semibold text-sm text-white truncate">
+                            {e.note || e.categories?.name || 'Expense'}
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-white/50 mt-0.5">
+                            <span>{formatDateDisplay(e.spent_on)}</span>
+                            {e.categories?.name && (
+                              <span
+                                className="rounded-full px-2 py-0.5 text-[10px] font-semibold border border-white/10"
+                                style={{
+                                  backgroundColor: `${e.categories.color}20`,
+                                  color: e.categories.color,
+                                }}
+                              >
+                                {e.categories.name}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="text-base font-bold text-white tabular-nums">
+                          {money(e.amount)}
+                        </span>
+                        <button
+                          onClick={() => deleteExpense(e.id)}
+                          className="rounded-full p-2 text-white/40 hover:text-[#ff3b30] hover:bg-[#ff3b30]/10 transition"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
         ) : (
           <CategoryManager
             categories={activeCategories}
