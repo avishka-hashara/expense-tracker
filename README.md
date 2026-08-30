@@ -1,5 +1,7 @@
 # SpendWise - Executive Expense Tracker & Wealth Analytics
 
+![SpendWise Executive Dashboard Banner](./public/spendwise-banner.jpg)
+
 SpendWise is a responsive, high-performance personal finance and expense analytics web application. Built with React 19, Tailwind CSS v4, and Supabase (PostgreSQL), SpendWise delivers an executive dashboard experience with real-time financial tracking, interactive monthly calendar views, dynamic category management, hybrid offline persistence, and automated Excel reporting.
 
 ---
